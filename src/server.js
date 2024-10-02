@@ -24,4 +24,5 @@ connection.query('SELECT 1 + 1 AS solution', (error, results) => {
     console.error('Error en la consulta:', error);
     return;
   }
-  console
+  console.log('El resultado de la consulta es:', results[0].solution);
+});

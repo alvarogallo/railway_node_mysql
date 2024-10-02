@@ -6,7 +6,8 @@ const connection = mysql.createConnection({
   user: 'root',
   password: 'dSrhyoXVNnNhIJfXhFHJemcviwIqDMKe',
   database: 'railway',
-  port: 3306
+  port: 3306,
+  connectTimeout: 30000 // 30 segundos
 });
 
 // Conéctate a la base de datos

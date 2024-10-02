@@ -1,12 +1,12 @@
 const mysql = require('mysql2');
 
-// Crea la conexión a la base de datos
+// Configurar la conexión directamente en el código
 const connection = mysql.createConnection({
-  host: process.env.MYSQLHOST,  // Host de tu base de datos en Railway
-  user: process.env.MYSQLUSER,  // Usuario de tu base de datos
-  password: process.env.MYSQLPASSWORD,  // Contraseña de tu base de datos
-  database: process.env.MYSQLDATABASE,  // Nombre de la base de datos
-  port: process.env.MYSQLPORT  // Puerto de la base de datos
+  host: 'mysql.railway.internal',
+  user: 'root',
+  password: 'dSrhyoXVNnNhIJfXhFHJemcviwIqDMKe',
+  database: 'railway',
+  port: 3306
 });
 
 // Conéctate a la base de datos
@@ -18,4 +18,10 @@ connection.connect((err) => {
   console.log('Conectado a la base de datos como ID ' + connection.threadId);
 });
 
-module.exports = connection;
+// Ejemplo de una consulta
+connection.query('SELECT 1 + 1 AS solution', (error, results) => {
+  if (error) {
+    console.error('Error en la consulta:', error);
+    return;
+  }
+  console

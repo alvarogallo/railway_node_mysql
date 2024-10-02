@@ -1,6 +1,6 @@
 const mysql = require('mysql2/promise');
 
-const database = mysql.createPool({
+const pool = mysql.createPool({
   uri: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
@@ -9,7 +9,7 @@ const database = mysql.createPool({
 
 module.exports = {
   query: async (sql, params) => {
-    const [results] = await database.execute(sql, params);
+    const [results] = await pool.execute(sql, params);
     return results;
   }
 };

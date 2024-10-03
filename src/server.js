@@ -11,17 +11,16 @@ app.use(express.json());
 
 const server = http.createServer(app);
 
-// Configurar el servidor Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: "*", 
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
 const PORT = process.env.PORT || 3000;
 
-// Cargar el archivo JSON una sola vez en el inicio del servidor
+// Cargar el archivo JSON una sola vez al iniciar el servidor
 const filePath = path.resolve(__dirname, '../json_from_api_db/senders.json');
 let canales;
 
@@ -31,7 +30,15 @@ try {
     console.log('JSON cargado exitosamente:', canales);
 } catch (error) {
     console.error('Error al cargar el archivo JSON:', error);
-    process.exit(1); // Salir si el JSON no puede ser cargado
+    process.exit(1);
+}
+
+// Función para obtener solo la dirección IPv4
+function obtenerIPv4(ip) {
+    if (ip.includes('::ffff:')) {
+        return ip.split(':').pop();  // Extraer solo la parte IPv4
+    }
+    return ip;
 }
 
 // Comprobar conexión
@@ -47,35 +54,35 @@ io.on('connection', (socket) => {
     socket.on('mensaje', (data) => {
         const { canal, token, evento, mensaje } = data;
 
-        // Obtener la IP del cliente
-        const ipDelEnviador = socket.handshake.address;
+        // Obtener la IP del cliente y filtrar solo la IPv4
+        let ipDelEnviador = obtenerIPv4(socket.handshake.address);
 
-        // Validar canal, token e IP
-        const validacion = canales.find(c => c.canal === canal && c.token === token && c.ip === ipDelEnviador);
+        // Buscar coincidencia del canal y token
+        const validacion = canales.find(c => c.canal === canal && c.token === token);
 
         if (validacion) {
-            console.log(`Mensaje recibido del evento ${evento}: ${mensaje}`);
-            socket.emit('respuesta', {
-                mensaje: 'Validación exitosa. Mensaje recibido correctamente.',
-                ip: ipDelEnviador,
-                evento: evento,
-                mensajeRecibido: mensaje
-            });
-        } else {
-            const validacionCanalToken = canales.find(c => c.canal === canal && c.token === token);
-            if (validacionCanalToken) {
+            // Si la IP en el JSON es 0.0.0.0, aceptar cualquier IP
+            if (validacion.ip === '0.0.0.0' || validacion.ip === ipDelEnviador) {
+                console.log(`Mensaje recibido del evento ${evento}: ${mensaje}`);
+                socket.emit('respuesta', {
+                    mensaje: 'Validación exitosa. Mensaje recibido correctamente.',
+                    ip: ipDelEnviador,
+                    evento: evento,
+                    mensajeRecibido: mensaje
+                });
+            } else {
                 console.log('Error de validación: IP no autorizada');
                 socket.emit('respuesta', {
                     mensaje: 'Error: IP no autorizada.',
                     ip: ipDelEnviador
                 });
-            } else {
-                console.log('Error de validación: Canal o token inválido');
-                socket.emit('respuesta', {
-                    mensaje: 'Error: Canal o token inválido.',
-                    ip: ipDelEnviador
-                });
             }
+        } else {
+            console.log('Error de validación: Canal o token inválido');
+            socket.emit('respuesta', {
+                mensaje: 'Error: Canal o token inválido.',
+                ip: ipDelEnviador
+            });
         }
     });
 

@@ -1,11 +1,16 @@
 // validaciones/validar_enviador.js
 
-function validarEnviador() {
-  // Aquí puedes incluir la lógica para validar el enviador
-  // Por ejemplo, puedes tener condiciones que establezcan el valor de error y razon
+function validarEnviador(canal, canales) {
+  // Verifica si el canal existe
+  if (!canales.includes(canal)) {
+    const error = 'canal_no_encontrado'; // Mensaje de error si el canal no existe
+    const razon = `El canal '${canal}' no existe.`;
+    return [error, razon];
+  }
 
-  const error = ''; // Cambia esto según tu lógica
-  const razon = 'No hay errores'; // Cambia esto según tu lógica
+  // Si el canal existe, no hay error
+  const error = ''; 
+  const razon = 'Canal válido.'; // Mensaje de razón
 
   return [error, razon];
 }

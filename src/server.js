@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const fs = require('fs');
+const path = require('path'); // Importa el módulo path
 
 const app = express();
 app.use(cors()); // Habilita CORS para todas las rutas
@@ -22,7 +23,8 @@ const PORT = process.env.PORT || 3000;
 
 // Leer el archivo JSON que contiene los canales y tokens
 function obtenerCanales() {
-    const data = fs.readFileSync('../json_from_api_db/senders.json', 'utf8');
+    const filePath = path.resolve(__dirname, '../json_from_api_db/senders.json'); // Cambia la ruta aquí
+    const data = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(data);
 }
 

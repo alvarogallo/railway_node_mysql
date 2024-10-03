@@ -21,9 +21,9 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// Leer el archivo JSON que contiene los canales y tokens
+// Leer el archivo JSON que contiene los canales, tokens e IPs
 function obtenerCanales() {
-    const filePath = path.resolve(__dirname, '../json_from_api_db/senders.json'); // Cambia la ruta aquí
+    const filePath = path.resolve(__dirname, '../json_from_api_db/senders.json'); // Cambia la ruta aquí si es necesario
     const data = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(data);
 }
@@ -42,24 +42,34 @@ io.on('connection', (socket) => {
         const { canal, token } = data; // Extraer canal y token del mensaje
         const canales = obtenerCanales();
 
-        // Validar si el canal y el token son válidos
-        const validacion = canales.find(c => c.canal === canal && c.token === token);
-
         // Obtener la IP del cliente
         const ipDelEnviador = socket.handshake.address;
 
+        // Validar si el canal, token e IP son válidos
+        const validacion = canales.find(c => c.canal === canal && c.token === token && c.ip === ipDelEnviador);
+
         if (validacion) {
-            console.log('Mensaje recibido:', data);
+            console.log('Mensaje recibido y validación exitosa:', data);
             socket.emit('respuesta', {
                 mensaje: 'Validación exitosa. Mensaje recibido correctamente.',
-                ip: ipDelEnviador // Devuelve la IP del enviador
+                ip: ipDelEnviador
             });
         } else {
-            console.log('Error de validación:', data);
-            socket.emit('respuesta', {
-                mensaje: 'Error: Canal o token inválido.',
-                ip: ipDelEnviador // También devuelve la IP del enviador en caso de error
-            });
+            // Verificar si la IP es la causa del fallo
+            const validacionCanalToken = canales.find(c => c.canal === canal && c.token === token);
+            if (validacionCanalToken) {
+                console.log('Error de validación: IP no autorizada para:', data);
+                socket.emit('respuesta', {
+                    mensaje: 'Error: IP no autorizada.',
+                    ip: ipDelEnviador
+                });
+            } else {
+                console.log('Error de validación: Canal o token inválido para:', data);
+                socket.emit('respuesta', {
+                    mensaje: 'Error: Canal o token inválido.',
+                    ip: ipDelEnviador
+                });
+            }
         }
     });
 

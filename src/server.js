@@ -3,49 +3,54 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const fs = require('fs');
-const path = require('path'); // Importa el módulo path
+const path = require('path');
 
 const app = express();
-app.use(cors()); // Habilita CORS para todas las rutas
-app.use(express.json()); // Para manejar JSON en las solicitudes
+app.use(cors());
+app.use(express.json());
 
 const server = http.createServer(app);
 
-// Configurar el servidor Socket.IO para permitir CORS
+// Configurar el servidor Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: "*", // Cambia esto si necesitas permitir un origen específico
+    origin: "*", 
     methods: ["GET", "POST"]
   }
 });
 
 const PORT = process.env.PORT || 3000;
 
-// Leer el archivo JSON que contiene los canales, tokens e IPs
-function obtenerCanales() {
-    const filePath = path.resolve(__dirname, '../json_from_api_db/senders.json'); // Cambia la ruta aquí si es necesario
+// Cargar el archivo JSON una sola vez en el inicio del servidor
+const filePath = path.resolve(__dirname, '../json_from_api_db/senders.json');
+let canales;
+
+try {
     const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
+    canales = JSON.parse(data);
+    console.log('JSON cargado exitosamente:', canales);
+} catch (error) {
+    console.error('Error al cargar el archivo JSON:', error);
+    process.exit(1); // Salir si el JSON no puede ser cargado
 }
 
-// Endpoint para comprobar la conexión
+// Comprobar conexión
 app.get('/', (req, res) => {
-    const url = req.protocol + '://' + req.get('host'); // Obtiene la URL base
+    const url = req.protocol + '://' + req.get('host');
     res.send(`Servidor Socket.IO corriendo con CORS en: ${url}`);
 });
 
-// Escuchar conexiones de Socket.IO
+// Manejo de conexiones Socket.IO
 io.on('connection', (socket) => {
     console.log('Cliente conectado:', socket.id);
 
     socket.on('mensaje', (data) => {
-        const { canal, token, evento, mensaje } = data; // Extraer canal, token, evento y mensaje del mensaje del cliente
-        const canales = obtenerCanales();
+        const { canal, token, evento, mensaje } = data;
 
         // Obtener la IP del cliente
         const ipDelEnviador = socket.handshake.address;
 
-        // Validar si el canal, token e IP son válidos
+        // Validar canal, token e IP
         const validacion = canales.find(c => c.canal === canal && c.token === token && c.ip === ipDelEnviador);
 
         if (validacion) {
@@ -57,16 +62,15 @@ io.on('connection', (socket) => {
                 mensajeRecibido: mensaje
             });
         } else {
-            // Verificar si la IP es la causa del fallo
             const validacionCanalToken = canales.find(c => c.canal === canal && c.token === token);
             if (validacionCanalToken) {
-                console.log('Error de validación: IP no autorizada para:', data);
+                console.log('Error de validación: IP no autorizada');
                 socket.emit('respuesta', {
                     mensaje: 'Error: IP no autorizada.',
                     ip: ipDelEnviador
                 });
             } else {
-                console.log('Error de validación: Canal o token inválido para:', data);
+                console.log('Error de validación: Canal o token inválido');
                 socket.emit('respuesta', {
                     mensaje: 'Error: Canal o token inválido.',
                     ip: ipDelEnviador

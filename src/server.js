@@ -1,29 +1,12 @@
-const mysql = require('mysql2');
+const express = require('express');
+const app = express();
 
-// Configurar la conexión directamente en el código
-const connection = mysql.createConnection({
-  host: 'mysql.railway.internal',
-  user: 'root',
-  password: 'dSrhyoXVNnNhIJfXhFHJemcviwIqDMKe',
-  database: 'railway',
-  port: 3306,
-  connectTimeout: 60000 // 30 segundos
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('¡Hola desde Railway!');
 });
 
-// Conéctate a la base de datos
-connection.connect((err) => {
-  if (err) {
-    console.error('Error conectando a la base de datos:', err.stack);
-    return;
-  }
-  console.log('Conectado a la base de datos como ID ' + connection.threadId);
-});
-
-// Ejemplo de una consulta
-connection.query('SELECT 1 + 1 AS solution', (error, results) => {
-  if (error) {
-    console.error('Error en la consulta:', error);
-    return;
-  }
-  console.log('El resultado de la consulta es:', results[0].solution);
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en el puerto ${PORT}`);
 });

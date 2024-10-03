@@ -1,36 +1,40 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());  // Habilita CORS para todas las rutas
+
 const server = http.createServer(app);
-const io = new Server(server);
+
+// Configurar el servidor Socket.IO para permitir CORS
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:8000",  // Cambia esto si necesitas permitir un origen específico
+    methods: ["GET", "POST"]
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 
-// Servir un mensaje simple para probar
 app.get('/', (req, res) => {
-  res.send('Servidor Socket.IO corriendo');
+  res.send('Servidor Socket.IO corriendo con CORS');
 });
 
-// Configurar evento para manejar las conexiones de sockets
 io.on('connection', (socket) => {
-  console.log('Nuevo cliente conectado', socket.id);
+  console.log('Cliente conectado:', socket.id);
 
-  // Puedes escuchar eventos específicos aquí
   socket.on('mensaje', (data) => {
-    console.log('Mensaje recibido: ', data);
-    // Enviar una respuesta al cliente
-    socket.emit('respuesta', 'Mensaje recibido en el servidor');
+    console.log('Mensaje recibido:', data);
+    socket.emit('respuesta', 'Mensaje recibido correctamente');
   });
 
-  // Detectar desconexión
   socket.on('disconnect', () => {
-    console.log('Cliente desconectado', socket.id);
+    console.log('Cliente desconectado');
   });
 });
 
-// Iniciar el servidor
 server.listen(PORT, () => {
-  console.log(`Servidor Socket.IO corriendo en el puerto ${PORT}`);
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });

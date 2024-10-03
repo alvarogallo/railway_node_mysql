@@ -39,7 +39,7 @@ io.on('connection', (socket) => {
     console.log('Cliente conectado:', socket.id);
 
     socket.on('mensaje', (data) => {
-        const { canal, token } = data; // Extraer canal y token del mensaje
+        const { canal, token, evento, mensaje } = data; // Extraer canal, token, evento y mensaje del mensaje del cliente
         const canales = obtenerCanales();
 
         // Obtener la IP del cliente
@@ -49,10 +49,12 @@ io.on('connection', (socket) => {
         const validacion = canales.find(c => c.canal === canal && c.token === token && c.ip === ipDelEnviador);
 
         if (validacion) {
-            console.log('Mensaje recibido y validación exitosa:', data);
+            console.log(`Mensaje recibido del evento ${evento}: ${mensaje}`);
             socket.emit('respuesta', {
                 mensaje: 'Validación exitosa. Mensaje recibido correctamente.',
-                ip: ipDelEnviador
+                ip: ipDelEnviador,
+                evento: evento,
+                mensajeRecibido: mensaje
             });
         } else {
             // Verificar si la IP es la causa del fallo

@@ -52,9 +52,9 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);
 
-  // Escuchar el evento 'listener' con canal y token
-  socket.on('listener', (data) => {
-    const { canal, token } = data;
+  // Recibir evento 'enviarEvento' desde el enviador
+  socket.on('enviarEvento', (data) => {
+    const { canal, token, evento, mensaje } = data;
 
     // Validar canal y token
     const resultadoValidacion = validarListener(canal, token);
@@ -63,8 +63,24 @@ io.on('connection', (socket) => {
       console.log('Error en la validación:', resultadoValidacion.error);
       socket.emit('respuesta', { mensaje: resultadoValidacion.error });
     } else {
-      console.log('Listener válido:', { canal, token, ip: resultadoValidacion.ip });
-      socket.emit('respuesta', { mensaje: 'Validación exitosa', ip: resultadoValidacion.ip });
+      console.log('Evento enviado:', { canal, evento, mensaje });
+      io.to(canal).emit(evento, mensaje); // Enviar el evento y el mensaje al canal correspondiente
+    }
+  });
+
+  // Unirse a un canal
+  socket.on('unirseCanal', (data) => {
+    const { canal, token } = data;
+
+    // Validar canal y token
+    const resultadoValidacion = validarListener(canal, token);
+
+    if (resultadoValidacion.error) {
+      socket.emit('respuesta', { mensaje: resultadoValidacion.error });
+    } else {
+      socket.join(canal); // Unirse al canal si es válido
+      socket.emit('respuesta', { mensaje: `Te has unido al canal: ${canal}` });
+      console.log(`Socket ${socket.id} se unió al canal ${canal}`);
     }
   });
 

@@ -45,12 +45,21 @@ io.on('connection', (socket) => {
         // Validar si el canal y el token son válidos
         const validacion = canales.find(c => c.canal === canal && c.token === token);
 
+        // Obtener la IP del cliente
+        const ipDelEnviador = socket.handshake.address;
+
         if (validacion) {
             console.log('Mensaje recibido:', data);
-            socket.emit('respuesta', 'Validación exitosa. Mensaje recibido correctamente.');
+            socket.emit('respuesta', {
+                mensaje: 'Validación exitosa. Mensaje recibido correctamente.',
+                ip: ipDelEnviador // Devuelve la IP del enviador
+            });
         } else {
             console.log('Error de validación:', data);
-            socket.emit('respuesta', 'Error: Canal o token inválido.');
+            socket.emit('respuesta', {
+                mensaje: 'Error: Canal o token inválido.',
+                ip: ipDelEnviador // También devuelve la IP del enviador en caso de error
+            });
         }
     });
 

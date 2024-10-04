@@ -48,6 +48,21 @@ app.get('/', (req, res) => {
   res.send(`Servidor Socket.IO corriendo en: ${url}`);
 });
 
+// Manejar solicitudes POST y emitir eventos a través de Socket.IO
+app.post('/enviar-mensaje', (req, res) => {
+  const { canal, token, evento, mensaje } = req.body;
+
+  // Validar el canal y el token
+  const resultadoValidacion = validarListener(canal, token);
+
+  if (resultadoValidacion.error) {
+    res.status(400).json({ error: resultadoValidacion.error });
+  } else {
+    io.to(canal).emit(evento, mensaje);
+    res.json({ mensaje: 'Evento enviado correctamente' });
+  }
+});
+
 // Manejo de conexiones Socket.IO
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);

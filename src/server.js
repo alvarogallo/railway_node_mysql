@@ -4,10 +4,10 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-
 const app = express();
+
 app.use(cors());
-app.use(express.json()); // Middleware para procesar JSON
+app.use(express.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -19,28 +19,31 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// Ruta al archivo JSON de listeners
-const listenersPath = path.join(__dirname, '../json_from_api_db/listeners.json');
+// Ruta al archivo JSON de enviadores
+const sendersPath = path.join(__dirname, '../json_from_api_db/senders.json');
 
-// Cargar el archivo JSON de listeners una vez en memoria
-let listeners = [];
-try {
-  const data = fs.readFileSync(listenersPath, 'utf8');
-  listeners = JSON.parse(data);
-} catch (err) {
-  console.error('Error al cargar el archivo listeners.json:', err);
-}
+// Función para validar canal, token e IP del enviador
+function validarEnviador(canal, token, ipCliente) {
+  try {
+    const data = fs.readFileSync(sendersPath, 'utf8');
+    const enviadores = JSON.parse(data);
 
-// Función para validar canal y token
-function validarListener(canal, token) {
-  const listenerValido = listeners.find(
-    (listener) => listener.canal === canal && listener.token === token
-  );
+    const enviadorValido = enviadores.find(
+      (enviador) => enviador.canal === canal && enviador.token === token
+    );
 
-  if (listenerValido) {
-    return { error: '', ip: listenerValido.ip };
-  } else {
-    return { error: 'Canal o token no válidos', ip: null };
+    if (enviadorValido) {
+      if (enviadorValido.ip === '0.0.0.0' || enviadorValido.ip === ipCliente) {
+        return { error: '', ip: enviadorValido.ip };
+      } else {
+        return { error: 'IP no autorizada', ip: null };
+      }
+    } else {
+      return { error: 'Canal o token no válidos', ip: null };
+    }
+  } catch (err) {
+    console.error('Error al leer el archivo senders.json:', err);
+    return { error: 'Error en la validación', ip: null };
   }
 }
 
@@ -53,19 +56,16 @@ app.get('/', (req, res) => {
 // Manejar solicitudes POST y emitir eventos a través de Socket.IO
 app.post('/enviar-mensaje', (req, res) => {
   const { canal, token, evento, mensaje } = req.body;
+  const ipCliente = req.ip;  // Obtener IP del cliente
 
-  if (!canal || !token || !evento || !mensaje) {
-    return res.status(400).json({ error: 'Faltan parámetros en la solicitud' });
-  }
-
-  // Validar el canal y el token
-  const resultadoValidacion = validarListener(canal, token);
+  // Validar el canal, token y IP
+  const resultadoValidacion = validarEnviador(canal, token, ipCliente);
 
   if (resultadoValidacion.error) {
-    return res.status(400).json({ error: resultadoValidacion.error });
+    res.status(400).json({ error: resultadoValidacion.error });
   } else {
-    io.to(canal).emit(evento, mensaje); // Enviar el evento y el mensaje al canal correspondiente
-    return res.json({ mensaje: 'Evento enviado correctamente' });
+    io.to(canal).emit(evento, mensaje);
+    res.json({ mensaje: 'Evento enviado correctamente' });
   }
 });
 
@@ -76,9 +76,10 @@ io.on('connection', (socket) => {
   // Recibir evento 'enviarEvento' desde el enviador
   socket.on('enviarEvento', (data) => {
     const { canal, token, evento, mensaje } = data;
+    const ipCliente = socket.handshake.address;  // Obtener la IP del cliente
 
-    // Validar canal y token
-    const resultadoValidacion = validarListener(canal, token);
+    // Validar canal, token y IP
+    const resultadoValidacion = validarEnviador(canal, token, ipCliente);
 
     if (resultadoValidacion.error) {
       console.log('Error en la validación:', resultadoValidacion.error);
@@ -92,9 +93,10 @@ io.on('connection', (socket) => {
   // Unirse a un canal
   socket.on('unirseCanal', (data) => {
     const { canal, token } = data;
+    const ipCliente = socket.handshake.address;  // Obtener la IP del cliente
 
-    // Validar canal y token
-    const resultadoValidacion = validarListener(canal, token);
+    // Validar canal, token y IP
+    const resultadoValidacion = validarEnviador(canal, token, ipCliente);
 
     if (resultadoValidacion.error) {
       socket.emit('respuesta', { mensaje: resultadoValidacion.error });
@@ -111,7 +113,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Arrancar el servidor
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });

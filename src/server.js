@@ -83,7 +83,7 @@ app.get('/', (req, res) => {
 });
 // Nueva ruta para ver los logs
 app.get('/logs', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'logs.html'));
+  res.sendFile(path.join(__dirname, '../public', 'logs.html'));
 });
 
 // Nueva ruta para obtener los datos de los logs en formato JSON

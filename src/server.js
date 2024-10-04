@@ -101,4 +101,17 @@ io.on('connection', (socket) => {
     } else {
       socket.join(canal); // Unirse al canal si es válido
       socket.emit('respuesta', { mensaje: `Te has unido al canal: ${canal}` });
-      console.log(`
+      console.log(`Socket ${socket.id} se unió al canal ${canal}`);
+    }
+  });
+
+  // Manejar desconexión
+  socket.on('disconnect', () => {
+    console.log('Cliente desconectado');
+  });
+});
+
+// Arrancar el servidor
+server.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
+});

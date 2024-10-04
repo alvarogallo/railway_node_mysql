@@ -7,6 +7,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // Middleware para procesar JSON
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -21,24 +22,25 @@ const PORT = process.env.PORT || 3000;
 // Ruta al archivo JSON de listeners
 const listenersPath = path.join(__dirname, '../json_from_api_db/listeners.json');
 
+// Cargar el archivo JSON de listeners una vez en memoria
+let listeners = [];
+try {
+  const data = fs.readFileSync(listenersPath, 'utf8');
+  listeners = JSON.parse(data);
+} catch (err) {
+  console.error('Error al cargar el archivo listeners.json:', err);
+}
+
 // Función para validar canal y token
 function validarListener(canal, token) {
-  try {
-    const data = fs.readFileSync(listenersPath, 'utf8');
-    const listeners = JSON.parse(data);
+  const listenerValido = listeners.find(
+    (listener) => listener.canal === canal && listener.token === token
+  );
 
-    const listenerValido = listeners.find(
-      (listener) => listener.canal === canal && listener.token === token
-    );
-
-    if (listenerValido) {
-      return { error: '', ip: listenerValido.ip };
-    } else {
-      return { error: 'Canal o token no válidos', ip: null };
-    }
-  } catch (err) {
-    console.error('Error al leer el archivo listeners.json:', err);
-    return { error: 'Error en la validación', ip: null };
+  if (listenerValido) {
+    return { error: '', ip: listenerValido.ip };
+  } else {
+    return { error: 'Canal o token no válidos', ip: null };
   }
 }
 
@@ -52,14 +54,18 @@ app.get('/', (req, res) => {
 app.post('/enviar-mensaje', (req, res) => {
   const { canal, token, evento, mensaje } = req.body;
 
+  if (!canal || !token || !evento || !mensaje) {
+    return res.status(400).json({ error: 'Faltan parámetros en la solicitud' });
+  }
+
   // Validar el canal y el token
   const resultadoValidacion = validarListener(canal, token);
 
   if (resultadoValidacion.error) {
-    res.status(400).json({ error: resultadoValidacion.error });
+    return res.status(400).json({ error: resultadoValidacion.error });
   } else {
-    io.to(canal).emit(evento, mensaje);
-    res.json({ mensaje: 'Evento enviado correctamente' });
+    io.to(canal).emit(evento, mensaje); // Enviar el evento y el mensaje al canal correspondiente
+    return res.json({ mensaje: 'Evento enviado correctamente' });
   }
 });
 
@@ -95,16 +101,4 @@ io.on('connection', (socket) => {
     } else {
       socket.join(canal); // Unirse al canal si es válido
       socket.emit('respuesta', { mensaje: `Te has unido al canal: ${canal}` });
-      console.log(`Socket ${socket.id} se unió al canal ${canal}`);
-    }
-  });
-
-  // Manejar desconexión
-  socket.on('disconnect', () => {
-    console.log('Cliente desconectado');
-  });
-});
-
-server.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
-});
+      console.log(`

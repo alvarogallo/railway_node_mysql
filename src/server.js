@@ -42,9 +42,13 @@ function validarListener(canal, token) {
   }
 }
 
+// app.get('/', (req, res) => {
+//   const url = req.protocol + '://' + req.get('host');
+//   res.send(`Servidor Socket.IO corriendo en: ${url}`);
+// });
+
 app.get('/', (req, res) => {
-  const url = req.protocol + '://' + req.get('host');
-  res.send(`Servidor Socket.IO corriendo en: ${url}`);
+  res.sendFile(path.join(__dirname, '../public',  'index.html'));
 });
 
 app.post('/enviar-mensaje', (req, res) => {

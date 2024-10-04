@@ -81,7 +81,20 @@ function addLog(canal, evento, mensaje) {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public',  'index.html'));
 });
+// Nueva ruta para ver los logs
+app.get('/logs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'logs.html'));
+});
 
+// Nueva ruta para obtener los datos de los logs en formato JSON
+app.get('/api/logs', (req, res) => {
+  if (fs.existsSync(logPath)) {
+    const logs = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+    res.json(logs);
+  } else {
+    res.json([]);
+  }
+});
 // app.post('/enviar-mensaje', (req, res) => {
 //   const { canal, token, evento, mensaje } = req.body;
 //   const ipCliente = req.ip;

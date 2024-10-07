@@ -71,8 +71,10 @@ function addLog(canal, evento, mensaje) {
 
   fs.writeFileSync(logPath, JSON.stringify(logs, null, 2));
 }
-
-
+function addServerRebootLog() {
+  addLog('system', 'server_reboot', 'Servidor Rebooted');
+}
+addServerRebootLog();
 // app.get('/', (req, res) => {
 //   const url = req.protocol + '://' + req.get('host');
 //   res.send(`Servidor Socket.IO corriendo en: ${url}`);

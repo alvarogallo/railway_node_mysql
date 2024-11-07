@@ -227,23 +227,47 @@
             container.innerHTML = errorMessage;
         }
 
-        async function loadJsonContent() {
-            try {
-                const response = await fetch('/api/json-content');
-                const data = await response.json();
+        // async function loadJsonContent() {
+        //     try {
+        //         const response = await fetch('/api/json-content');
+        //         const data = await response.json();
 
-                document.getElementById('listenersContent').innerHTML = 
-                    JSON.stringify(data.listeners, null, 2);
-                document.getElementById('sendersContent').innerHTML = 
-                    JSON.stringify(data.senders, null, 2);
+        //         document.getElementById('listenersContent').innerHTML = 
+        //             JSON.stringify(data.listeners, null, 2);
+        //         document.getElementById('sendersContent').innerHTML = 
+        //             JSON.stringify(data.senders, null, 2);
                 
-                console.log('Configuración cargada:', data);
-            } catch (error) {
-                console.error('Error cargando configuración:', error);
-                showError('listenersContent', error);
-                showError('sendersContent', error);
-            }
-        }
+        //         console.log('Configuración cargada:', data);
+        //     } catch (error) {
+        //         console.error('Error cargando configuración:', error);
+        //         showError('listenersContent', error);
+        //         showError('sendersContent', error);
+        //     }
+        // }
+        async function loadJsonContent() {
+    try {
+        const response = await fetch('/api/json-content');
+        const data = await response.json();
+
+        // Extrae y muestra solo los nombres de los canales sin el token
+        const channelNames = data.listeners.map(listener => listener.canal);
+        const history = data.senders.map(sender => sender.mensaje); // o ajusta según la estructura del historial
+
+        // Convierte el array de nombres de canales a una lista legible sin JSON
+        document.getElementById('listenersContent').innerHTML = 
+            channelNames.join('<br>');
+
+        // Convierte el historial a texto (ajusta según el formato que desees mostrar)
+        document.getElementById('sendersContent').innerHTML = 
+            history.join('<br>');
+
+        console.log('Canales y historial cargados:', channelNames, history);
+    } catch (error) {
+        console.error('Error cargando canales e historial:', error);
+        showError('listenersContent', error);
+        showError('sendersContent', error);
+    }
+}
 
         async function updateChannels() {
             try {

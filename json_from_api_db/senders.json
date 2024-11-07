@@ -10,5 +10,9 @@
   {
     "canal": "ais_shipping",
     "token": "yo_escucho_ais"
-  }
+  },
+  {
+    "canal": "Bingo_Automatico",
+    "token": "bingo_automatico"
+  }  
 ]

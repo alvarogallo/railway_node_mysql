@@ -1,12 +1,30 @@
 [
   {
-    "created_at": "2024-10-07T12:40:09.132Z",
+    "created_at": "2024-11-07T00:07:21.223Z",
     "canal": "system",
     "evento": "server_reboot",
     "mensaje": "Servidor Rebooted"
   },
   {
-    "created_at": "2024-10-07T12:43:34.722Z",
+    "created_at": "2024-11-07T00:14:43.929Z",
+    "canal": "system",
+    "evento": "server_reboot",
+    "mensaje": "Servidor Rebooted"
+  },
+  {
+    "created_at": "2024-11-07T00:17:27.311Z",
+    "canal": "system",
+    "evento": "server_reboot",
+    "mensaje": "Servidor Rebooted"
+  },
+  {
+    "created_at": "2024-11-07T01:27:05.844Z",
+    "canal": "system",
+    "evento": "server_reboot",
+    "mensaje": "Servidor Rebooted"
+  },
+  {
+    "created_at": "2024-11-07T01:34:07.195Z",
     "canal": "system",
     "evento": "server_reboot",
     "mensaje": "Servidor Rebooted"

@@ -1,17 +1,15 @@
 [
   {
     "canal": "bingo",
-    "token": "token_enviador_123",
-    "ip": "0.0.0.0"
+    "token": "oidor_2"
   },
   {
     "canal": "rifas",
-    "token": "Enviador_RV_001",
-    "ip": "0.0.0.0"
+    "token": "rifa_recibir"
   },
   {
     "canal": "ais_shipping",
-    "token": "envidor",
+    "token": "yo_escucho_ais",
     "ip": "0.0.0.0"
   },
   {
